@@ -166,6 +166,14 @@ if (NOT USE_GREENTEA AND NOT USE_CUDA)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DCPU_ONLY)
 endif()
 
+if(USE_DLPRIM) 
+    find_path(DLPRIM_INC dlprim/core_ops.hpp)
+    find_library(DLPRIM_LIB dlprim)
+    list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${DLPRIM_INC})
+    list(APPEND Caffe_LINKER_LIBS PUBLIC ${DLPRIM_LIB})
+    list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_DLPRIM)
+endif()    
+
 # ---[ clBLAS
 if (USE_CLBLAS AND NOT USE_ISAAC)
   find_package(clBLAS)

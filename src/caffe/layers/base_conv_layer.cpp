@@ -12,7 +12,20 @@
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
+#include <sstream>
 namespace caffe {
+
+static std::string v2s(std::vector<int> const &p)
+{
+	std::ostringstream ss;
+	if(p.empty())
+		return "NULL";
+	ss<<p[0];
+	for(int i=1;i<int(p.size());i++) {
+		ss<<":"<<p[i];
+	}
+	return ss.str();
+}
 
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -21,6 +34,10 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
+
+  
+
+
   force_nd_im2col_ = conv_param.force_nd_im2col();
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int_tp first_spatial_axis = channel_axis_ + 1;
@@ -192,6 +209,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  
+
+  //LOG(ERROR) << "CONV!!! in=" << v2s(bottom[0]->shape()) <<" pad=" << pad_data[0] << "/"<<pad_data[1] << " ker=" <<kernel_shape_data[0]<<"/"<<kernel_shape_data[1] 
+  //	<< " stride="<< stride_data[0]<<"/" << stride_data[1] <<" group=" << group_ << " num_out=" << num_output_;
+
+
+
 }
 
 template<typename Dtype>

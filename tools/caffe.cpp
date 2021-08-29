@@ -422,7 +422,6 @@ int time() {
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;
-  total_timer.Start();
   Timer forward_timer;
   Timer backward_timer;
   Timer timer;
@@ -430,7 +429,15 @@ int time() {
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
   double backward_time = 0.0;
-  for (int_tp j = 0; j < FLAGS_iterations; ++j) {
+  for (int_tp j = -FLAGS_iterations / 5; j < FLAGS_iterations; ++j) {
+      if(j == 0) {
+          total_timer.Start();
+          forward_time = backward_time = 0;
+          for (int_tp i = 0; i < layers.size(); ++i) {
+            forward_time_per_layer[i] = 0;
+            backward_time_per_layer[i] = 0;
+          }
+      }
     Timer iter_timer;
     iter_timer.Start();
     forward_timer.Start();

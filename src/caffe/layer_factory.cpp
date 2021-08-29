@@ -37,6 +37,8 @@
 #include "caffe/layers/libdnn_pool_layer.hpp"
 #endif  // USE_LIBDNN
 
+#include "caffe/layers/dlprim_conv_layer.hpp"
+
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
 #endif
@@ -194,7 +196,15 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 #endif  // USE_CUDNN
 #ifdef USE_LIBDNN
   } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
-    return shared_ptr<Layer<Dtype> >(new LibDNNConvolutionLayer<Dtype>(param));
+    #ifdef USE_DLPRIM
+    if(std::is_same<Dtype, float>::value) {
+        return shared_ptr<Layer<Dtype> >(new DLPrimConvolutionLayer<Dtype>(param));
+    }
+    else 
+    #endif        
+    {
+        return shared_ptr<Layer<Dtype> >(new LibDNNConvolutionLayer<Dtype>(param));
+    }
 #endif  // USE_LIBDNN
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";

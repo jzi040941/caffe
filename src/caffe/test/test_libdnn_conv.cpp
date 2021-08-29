@@ -1,5 +1,4 @@
 #ifdef USE_LIBDNN
-
 #include <algorithm>
 #include <random>
 #include <vector>

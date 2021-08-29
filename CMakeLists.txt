@@ -51,6 +51,7 @@ include(cmake/WindowsCreateLinkHeader.cmake)
 include(cmake/TargetResolvePrerequesites.cmake)
 
 # ---[ Options
+caffe_option(USE_DLPRIM "Build Caffe with DLPrim OpenCL library" ON)
 caffe_option(CPU_ONLY "Build Caffe without CUDA and OpenCL support" OFF)
 caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" OFF)
@@ -89,11 +90,14 @@ if(CPU_ONLY)
   set(USE_LIBDNN OFF)
   set(USE_CLBLAS OFF)
   set(USE_CLBLAST OFF)
+  set(USE_DLPRIM OFF)
 endif()
 
 if(USE_ISAAC)
   set(USE_CLBLAS ON)
 endif()
+
+
 
 caffe_option(protobuf_MODULE_COMPATIBLE "Make the protobuf-config.cmake compatible with the module mode" ON IF MSVC)
 caffe_option(COPY_PREREQUISITES "Copy the prerequisites next to each executable or shared library directory" ON IF MSVC)

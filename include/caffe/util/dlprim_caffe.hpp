@@ -10,10 +10,31 @@ namespace dputil {
     }
 
     template<typename T>
-    dlprim::Tensor blob_data_or_diff_to_tensor(Blob<T> &blob,bool is_data)
+    dlprim::Tensor mutable_blob_data_or_diff_to_tensor(Blob<T> &blob,bool is_data)
     {
         auto ptr = is_data ? blob.mutable_gpu_data() : blob.mutable_gpu_diff();
         cl_mem mem = reinterpret_cast<cl_mem>(ptr);
+        dlprim::DataType dt = dlprim::TypeTraits<T>::data_type;
+        dlprim::Shape shape = to_shape(blob.shape());
+        return dlprim::Tensor(cl::Buffer(mem,true),0,shape,dt);
+    }
+
+    template<typename T>
+    dlprim::Tensor mutable_blob_data_to_tensor(Blob<T> &blob)
+    {
+        return mutable_blob_data_or_diff_to_tensor(blob,true);
+    }
+    template<typename T>
+    dlprim::Tensor mutable_blob_diff_to_tensor(Blob<T> &blob)
+    {
+        return mutable_blob_data_or_diff_to_tensor(blob,false);
+    }
+
+    template<typename T>
+    dlprim::Tensor blob_data_or_diff_to_tensor(Blob<T> &blob,bool is_data)
+    {
+        auto ptr = is_data ? blob.gpu_data() : blob.gpu_diff();
+        cl_mem mem = reinterpret_cast<cl_mem>(const_cast<T*>(ptr));
         dlprim::DataType dt = dlprim::TypeTraits<T>::data_type;
         dlprim::Shape shape = to_shape(blob.shape());
         return dlprim::Tensor(cl::Buffer(mem,true),0,shape,dt);

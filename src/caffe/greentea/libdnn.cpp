@@ -350,17 +350,7 @@ void LibDNN<Dtype>::SetMemory(Dtype* memory, int_tp count, int_tp offset,
     viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("fill_memory");
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
 
-    int wgs = dev_ptr_->workgroup_size(0);
-    wgs = std::min(wgs,256);
-
-    //std::cerr << "WGS=" << wgs << std::endl;
-
-    kernel.local_work_size(0, wgs);
-    kernel.local_work_size(1, 1);
-    kernel.local_work_size(2, 1);
-
-    kernel.global_work_size(0, ((count - 1) / wgs + 1) * wgs);
-    //kernel.global_work_size(0, ((count - wgs + 1) / wgs * wgs));
+    kernel.global_work_size(0, count);
     kernel.global_work_size(1, 1);
     kernel.global_work_size(2, 1);
 

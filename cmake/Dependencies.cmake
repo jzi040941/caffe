@@ -168,7 +168,7 @@ endif()
 
 if(USE_DLPRIM) 
     find_path(DLPRIM_INC dlprim/core_ops.hpp)
-    find_library(DLPRIM_LIB dlprim)
+    find_library(DLPRIM_LIB dlprim_core)
     list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${DLPRIM_INC})
     list(APPEND Caffe_LINKER_LIBS PUBLIC ${DLPRIM_LIB})
     list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_DLPRIM)

@@ -1,6 +1,7 @@
 #ifdef USE_DLPRIM
 #include <algorithm>
 #include <vector>
+#include <chrono>
 
 #include <dlprim/core_ops.hpp>
 #include "caffe/layers/dlprim_conv_layer.hpp"
@@ -93,7 +94,7 @@ void DLPrimConvolutionLayer<Dtype>::Reshape(
         ws_size = std::max(ws_size,bwd_bias_->workspace());
 
     if(ws_size > 0)
-        ws_.reset(new dlprim::Tensor(ctx,dlprim::Shape(ws_size)));
+        ws_.reset(new dlprim::Tensor(ctx,dlprim::Shape(ws_size),dlprim::uint8_data));
     else
         ws_.reset(new dlprim::Tensor());
 
@@ -126,7 +127,7 @@ void DLPrimConvolutionLayer<Dtype>::Forward_gpu(
   dlprim::ExecutionContext ec = dputil::ec_from_id(this->device_->id());
   for (int_tp i = 0; i < bottom.size(); ++i) {
     dlprim::Tensor x = dputil::blob_data_to_tensor(*bottom[i]);
-    dlprim::Tensor y = dputil::blob_data_to_tensor(*top[i]);
+    dlprim::Tensor y = dputil::mutable_blob_data_to_tensor(*top[i]);
     fwd_->enqueue(x,
                   weight,
                   (this->bias_term_ ? &bias : nullptr),
@@ -143,27 +144,22 @@ void DLPrimConvolutionLayer<Dtype>::Backward_gpu(
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   dlprim::Tensor W  = dputil::blob_data_to_tensor(*this->blobs_[0]);
-  dlprim::Tensor dW = dputil::blob_diff_to_tensor(*this->blobs_[0]);
-  dlprim::Tensor dB;
-  if (this->bias_term_ && this->param_propagate_down_[1]) {
-    dB = dputil::blob_diff_to_tensor(*this->blobs_[1]);
-  }
-
 
   dlprim::ExecutionContext ec = dputil::ec_from_id(this->device_->id());
   for (int_tp i = 0; i < top.size(); ++i) {
     dlprim::Tensor dY = dputil::blob_diff_to_tensor(*top[i]);
     dlprim::Tensor  X = dputil::blob_data_to_tensor(*bottom[i]);
-    dlprim::Tensor dX = dputil::blob_diff_to_tensor(*bottom[i]);
-    if(propagate_down[i]) {
-      // enqueue(Tensor &dx,Tensor &w,Tensor &dy,Tensor &ws,float factor,ExecutionContext const &e) = 0;
-      bwd_data_->enqueue(dX,W,dY,*ws_,0.0f,ec);
+    if(this->bias_term_ && this->param_propagate_down_[1]) {
+      dlprim::Tensor dB = dputil::mutable_blob_diff_to_tensor(*this->blobs_[1]);
+      bwd_bias_->enqueue(dY,dB,*ws_,1.0f,ec);
     }
     if(this->param_propagate_down_[0]) {
+      dlprim::Tensor dW = dputil::mutable_blob_diff_to_tensor(*this->blobs_[0]);
       bwd_filter_->enqueue(X,dW,dY,*ws_,1.0f,ec);
     }
-    if(this->bias_term_ && this->param_propagate_down_[1]) {
-      bwd_bias_->enqueue(dY,dB,*ws_,1.0f,ec);
+    if(propagate_down[i]) {
+      dlprim::Tensor dX = dputil::blob_diff_to_tensor(*bottom[i]);
+      bwd_data_->enqueue(dX,W,dY,*ws_,0.0f,ec);
     }
   }
 }

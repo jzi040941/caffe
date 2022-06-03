@@ -508,8 +508,8 @@ message ArgMaxParameter {
 
 // Message that stores parameters used by ClipLayer
 message ClipParameter {
-  required float min = 1;
-  required float max = 2;
+  optional float min = 1;
+  optional float max = 2;
 }
 
 message ConcatParameter {
